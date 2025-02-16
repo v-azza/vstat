@@ -13,6 +13,7 @@ EnvOption1(){
 
 EnvOption2(){
 	# Function to call the environment variables for the current terminal session, and to print these to the user on demand
+	echo ""
 	read -p "Please enter what environment variable you want (e.g.: HOME, PATH, PWD) : " env_var
 	
 	if [[ -z "${!env_var}" ]]; then # A loop to check whether the environment variable exists and print it, if it does
@@ -20,7 +21,7 @@ EnvOption2(){
 	else 
 		echo "The value of '$env_var' is: ${!env_var}"
 	fi
-	read -p "Press Enter to return to the main menu"
+	echo ""
 }
 
 HardwarePrint(){
@@ -32,17 +33,34 @@ HardwarePrint(){
 	local uptimeHour=$(((uptime % 86400) / 3600))
 	local uptimeMin=$(((uptime % 3600) / 60))
 	echo ""
-	printf "Your device has been up for $uptimeDay days, $uptimeHour hours, and $uptimeMin minutes"
+	printf "This device has been up for $uptimeDay days, $uptimeHour hours, and $uptimeMin minutes"
 	echo ""
 	
-	cpuName=$(grep -m 1 'model name' /proc/cpuinfo)
+	cpuName=$(grep -m 1 'model name' /proc/cpuinfo | cut -d ':' -f2 | xargs)
 	cpuCoreCount=$(grep -c ^'processor' /proc/cpuinfo)
+	ramSizeTotal=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+	ramAvailable=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
+	gpu=$(lspci | grep -i 'vga\|3d')
 	
+	echo ""
+	printf "============== Hardware Information ==============\n"
+	printf "CPU Model		: %s\n" "$cpuName"
+	printf "CPU Cores		: %s\n" "$cpuCoreCount"
+	printf "Total RAM Installed	: %s\n" "$ramSizeTotal"
+	printf "Total RAM Available	: %s\n" "$ramAvailable"
 
 	echo ""
-	printf "$cpuName $cpuCoreCount"
-	printf "%-20s %-20s\n" "Item" "Description"
-	echo "---------------------------------------"
+}
+
+BatteryPrint(){
+	# Function to print battery stats, only when a check to see if upower is present and has passed
+	echo ""
+	if command -v upower &>/dev/null && upower -e | grep -qi 'BAT'; then
+		batteryStats=$(upower -i $(upower -e | grep -i BAT))
+		echo "$batteryStats"
+	else
+		echo "Upower command is not present on your system, or no battery detected."
+	fi
 	echo ""
 }
 
@@ -67,6 +85,13 @@ UsersGroups(){
 	echo ""
 }
 
+DiskUtils(){
+	# Function to print information about the disk being used, their types and utilisation
+	echo ""
+	echo "You've called DiskUtils function"
+	echo ""
+}
+
 MenuOption1(){
 	# Function to define when the user selects Option 1 in the main menu. This option handles and prints the user's envrionment variables
 	read -p "Select 1 to print commonly used values. Select 2 to find and print values: " option1
@@ -81,9 +106,10 @@ MenuOption1(){
 
 MenuOption2(){
 	# Function to define when user selects Option 2 in main menu
-	read -p "Select 1 to list the hardware being used on this device, or print interesting hardware metrics: "
+	read -p "Select 1 to list the hardware being used on this device, or print interesting hardware metrics. Select 2 to print battery statistcs: " REPLY
 		case $REPLY in
 			1) HardwarePrint ;;
+			2) BatteryPrint ;;
 			*) echo "Invaild choice, try again" ;;
 		esac
 	read -p "Press Enter to return to the main menu"
@@ -99,6 +125,11 @@ MenuOption4(){
 	read -p "Press Enter to return to the main menu"
 }
 
+MenuOption5(){
+	DiskUtils
+	read -p "Press Enter to return to the main menu"
+}
+
 echo ""
 echo "Welcome to vstat. You are logged in as $USER"
 
@@ -110,7 +141,8 @@ echo "1. Environment variables"
 echo "2. Hardware stats"
 echo "3. Software stats"
 echo "4. Users and groups"
-echo "5. Exit"
+echo "5. Disk utilities"
+echo "6. Exit"
 echo ""
 
 read -p "Enter your choice: " choice
@@ -120,7 +152,8 @@ read -p "Enter your choice: " choice
 		2) MenuOption2 ;;
 		3) MenuOption3 ;;
 		4) MenuOption4 ;;
-		5) break ;;
+		5) MenuOption5 ;;
+		6) break ;;
 		*) echo "Invalid choice, try again" ;;
 	esac
 
