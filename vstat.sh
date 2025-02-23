@@ -38,11 +38,13 @@ HardwarePrint(){
 	
 	# Applying hardware stats from various system files into variables. Carry out text manipulation to get it into a readable format
 	cpuName=$(grep -m 1 'model name' /proc/cpuinfo | cut -d ':' -f2 | xargs)
-	cpuCoreCount=$(grep -m 1 'cpu cores' /proc/cpuinfo | awk '{print $NF}')
+	cpuCoreCount=$(awk '/cpu cores/ {cores=$NF} /physical id/ {cpus[$NF]=1} END {print cores * length(cpus)}' /proc/cpuinfo) 
 	cpuThreadCount=$(grep -c ^'processor' /proc/cpuinfo)
 	ramSizeTotal=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 	ramAvailable=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
 	gpu=$(lspci | grep -i 'vga\|3d' | cut -d ':' -f3 | xargs | sed 's/(rev [^)]*)//')
+	slashDiskUtil=$(df -h --output=source,size,used,avail,pcent / | tail -n +2 | awk '{print $5}')
+
 
 	# Base 2 coversions of KB into GB. Using bc floating point arithmetic so I can be more accurate and include 2 decimal places
 	ramSizeTotalGB=$(echo "scale=2; $ramSizeTotal/1048576" | bc)
@@ -56,11 +58,12 @@ HardwarePrint(){
 	printf "Total RAM Installed (GiB)	: %s\n" "$ramSizeTotalGB"
 	printf "Total RAM Available (GiB)	: %s\n" "$ramAvailableGB"
 	printf "GPU Model Installed		: %s\n" "$gpu"
+	printf "Disk utilised by / filesystem	: %s\n" "$slashDiskUtil"
 	echo ""
 }
 
 BatteryPrint(){
-	# Function to print battery stats, only when a check to see if upower is present and has passed
+	# Function to print battery stats, only when a check to see if upower is present has passed
 	echo ""
 	if command -v upower &>/dev/null && upower -e | grep -qi 'BAT'; then
 		batteryStats=$(upower -i $(upower -e | grep -i BAT))
@@ -68,6 +71,19 @@ BatteryPrint(){
 	else
 		echo "Upower command is not present on your system, or no battery detected."
 	fi
+	echo ""
+}
+
+SoftwareOS(){
+	# Function to present OS name, Kernel version and software stats
+	OSname=$(cat /etc/os-release | grep PRETTY_NAME | cut -d '"' -f2)
+	kernelVersion=$(uname -r)
+		
+
+	echo ""
+	printf "============== Software & OS Information ==============\n"
+	printf "OS Name 			: %s\n" "$OSname"
+	printf "Kernel Version			: %s\n" "$kernelVersion"
 	echo ""
 }
 
@@ -123,7 +139,7 @@ MenuOption2(){
 }
 
 MenuOption3(){
-	echo "You chose option 3"
+	SoftwareOS
 	read -p "Press Enter to return to the main menu"
 }
 

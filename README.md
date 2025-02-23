@@ -11,4 +11,4 @@ The script provides a menu interface for the user, where they can select each fu
 - All default BASH environment variables. Use the 'env' command to quickly see a list of what can be called into this script. 
 
 ### Packages
-- 
+- upower (for battery information)
