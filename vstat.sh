@@ -36,19 +36,26 @@ HardwarePrint(){
 	printf "This device has been up for $uptimeDay days, $uptimeHour hours, and $uptimeMin minutes"
 	echo ""
 	
+	# Applying hardware stats from various system files into variables. Carry out text manipulation to get it into a readable format
 	cpuName=$(grep -m 1 'model name' /proc/cpuinfo | cut -d ':' -f2 | xargs)
-	cpuCoreCount=$(grep -c ^'processor' /proc/cpuinfo)
+	cpuCoreCount=$(grep -m 1 'cpu cores' /proc/cpuinfo | awk '{print $NF}')
+	cpuThreadCount=$(grep -c ^'processor' /proc/cpuinfo)
 	ramSizeTotal=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 	ramAvailable=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
-	gpu=$(lspci | grep -i 'vga\|3d')
+	gpu=$(lspci | grep -i 'vga\|3d' | cut -d ':' -f3 | xargs | sed 's/(rev [^)]*)//')
+
+	# Base 2 coversions of KB into GB. Using bc floating point arithmetic so I can be more accurate and include 2 decimal places
+	ramSizeTotalGB=$(echo "scale=2; $ramSizeTotal/1048576" | bc)
+	ramAvailableGB=$(echo "scale=2; $ramAvailable/1048576" | bc)
 	
 	echo ""
 	printf "============== Hardware Information ==============\n"
-	printf "CPU Model		: %s\n" "$cpuName"
-	printf "CPU Cores		: %s\n" "$cpuCoreCount"
-	printf "Total RAM Installed	: %s\n" "$ramSizeTotal"
-	printf "Total RAM Available	: %s\n" "$ramAvailable"
-
+	printf "CPU Model			: %s\n" "$cpuName"
+	printf "CPU Cores			: %s\n" "$cpuCoreCount"
+	printf "CPU Threads			: %s\n" "$cpuThreadCount"
+	printf "Total RAM Installed (GiB)	: %s\n" "$ramSizeTotalGB"
+	printf "Total RAM Available (GiB)	: %s\n" "$ramAvailableGB"
+	printf "GPU Model Installed		: %s\n" "$gpu"
 	echo ""
 }
 
@@ -156,5 +163,4 @@ read -p "Enter your choice: " choice
 		6) break ;;
 		*) echo "Invalid choice, try again" ;;
 	esac
-
 done
