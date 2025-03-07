@@ -18,7 +18,7 @@ EnvOption2(){
 	
 	if [[ -z "${!env_var}" ]]; then # A loop to check whether the environment variable exists and print it, if it does
 		echo "The environment variable '$env_var' either does not exist or is currently empty."
-	else 
+	else
 		echo "The value of '$env_var' is: ${!env_var}"
 	fi
 	echo ""
@@ -58,7 +58,7 @@ HardwarePrint(){
 	printf "Total RAM Installed (GiB)	: %s\n" "$ramSizeTotalGB"
 	printf "Total RAM Available (GiB)	: %s\n" "$ramAvailableGB"
 	printf "GPU Model Installed		: %s\n" "$gpu"
-	printf "Disk utilised by / filesystem	: %s\n" "$slashDiskUtil"
+	printf "Disk space utilised by / filesystem	: %s\n" "$slashDiskUtil"
 	echo ""
 }
 
@@ -108,11 +108,28 @@ UsersGroups(){
 	echo ""
 }
 
-DiskUtils(){
+DiskUtilsPrint(){
 	# Function to print information about the disk being used, their types and utilisation
 	echo ""
-	echo "You've called DiskUtils function"
+	dfOutput=$(df -h)
+	echo "$dfOutput"
 	echo ""
+}
+
+TargetDisk(){
+	echo "This is the TargetDisk function"
+	read -p "Type the name of the filesystem you wish to investigate: " FILESYSTEM
+		# Call the name of the filesystem
+		case $FILESYSTEM in
+			1) SelectedDiskInfo ;;
+			*) echo "Invalid choice, try again" ;;
+		esac
+	echo ""
+}
+
+Network(){
+	#Function to print information about the network in use, and any other relevant metrics
+	echo "This is the Network function"
 }
 
 MenuOption1(){
@@ -149,7 +166,19 @@ MenuOption4(){
 }
 
 MenuOption5(){
-	DiskUtils
+	#Function to define when user selects Option 5 in main menu
+	read -p "Select 1 to print df -h output. Select 2 to print information regarding a specific filesystem: " REPLY
+		case $REPLY in
+			1) DiskUtilsPrint ;;
+			2) TargetDisk ;;
+			*) echo "Invalid choice, try again" ;;
+		esac
+	read -p "Press Enter to return to the main menu"
+}
+
+MenuOption6(){
+	#Function to define when user selects Option 6 in main menu
+	Network
 	read -p "Press Enter to return to the main menu"
 }
 
@@ -165,7 +194,8 @@ echo "2. Hardware stats"
 echo "3. Software stats"
 echo "4. Users and groups"
 echo "5. Disk utilities"
-echo "6. Exit"
+echo "6. Network information"
+echo "7. Exit"
 echo ""
 
 read -p "Enter your choice: " choice
@@ -176,7 +206,8 @@ read -p "Enter your choice: " choice
 		3) MenuOption3 ;;
 		4) MenuOption4 ;;
 		5) MenuOption5 ;;
-		6) break ;;
+		6) MenuOption6 ;;
+		7) break ;;
 		*) echo "Invalid choice, try again" ;;
 	esac
 done
