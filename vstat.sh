@@ -43,8 +43,7 @@ HardwarePrint(){
 	ramSizeTotal=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 	ramAvailable=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
 	gpu=$(lspci | grep -i 'vga\|3d' | cut -d ':' -f3 | xargs | sed 's/(rev [^)]*)//')
-	slashDiskUtil=$(df -h --output=source,size,used,avail,pcent / | tail -n +2 | awk '{print $5}')
-
+	totalDiskUtil=$(df --total --output=source,size,used,avail,pcent | tail -n 1 | awk '{print $5}')
 
 	# Base 2 coversions of KB into GB. Using bc floating point arithmetic so I can be more accurate and include 2 decimal places
 	ramSizeTotalGB=$(echo "scale=2; $ramSizeTotal/1048576" | bc)
@@ -52,13 +51,13 @@ HardwarePrint(){
 	
 	echo ""
 	printf "============== Hardware Information ==============\n"
-	printf "CPU Model			: %s\n" "$cpuName"
-	printf "CPU Cores			: %s\n" "$cpuCoreCount"
-	printf "CPU Threads			: %s\n" "$cpuThreadCount"
-	printf "Total RAM Installed (GiB)	: %s\n" "$ramSizeTotalGB"
-	printf "Total RAM Available (GiB)	: %s\n" "$ramAvailableGB"
-	printf "GPU Model Installed		: %s\n" "$gpu"
-	printf "Disk space utilised by / filesystem	: %s\n" "$slashDiskUtil"
+	printf "CPU Model					: %s\n" "$cpuName"
+	printf "CPU Cores					: %s\n" "$cpuCoreCount"
+	printf "CPU Threads					: %s\n" "$cpuThreadCount"
+	printf "Total RAM Installed (GiB)			: %s\n" "$ramSizeTotalGB"
+	printf "Total RAM Available (GiB)			: %s\n" "$ramAvailableGB"
+	printf "GPU Model Installed				: %s\n" "$gpu"
+	printf "Total Disk space utilised by all filesystems	: %s\n" "$totalDiskUtil"
 	echo ""
 }
 
